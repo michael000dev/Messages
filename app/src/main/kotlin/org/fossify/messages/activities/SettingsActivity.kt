@@ -11,15 +11,13 @@ import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.dialogs.SecurityDialog
 import org.fossify.commons.extensions.addLockedLabelIfNeeded
 import org.fossify.commons.extensions.beGone
-import org.fossify.commons.extensions.beGoneIf
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.formatWithDeprecatedBadge
 import org.fossify.commons.extensions.getBlockedNumbers
-import org.fossify.commons.extensions.getCustomizeColorsString
 import org.fossify.commons.extensions.getFontSizeText
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.isOrWasThankYouInstalled
-import org.fossify.commons.extensions.launchPurchaseThankYouIntent
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
@@ -51,7 +49,7 @@ import org.fossify.messages.helpers.LOCK_SCREEN_NOTHING
 import org.fossify.messages.helpers.LOCK_SCREEN_SENDER
 import org.fossify.messages.helpers.LOCK_SCREEN_SENDER_MESSAGE
 import org.fossify.messages.helpers.MessagesImporter
-import org.fossify.messages.helpers.refreshMessages
+import org.fossify.messages.helpers.refreshConversations
 import java.util.Locale
 import kotlin.system.exitProcess
 
@@ -88,27 +86,20 @@ class SettingsActivity : SimpleActivity() {
     private val binding by viewBinding(ActivitySettingsBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        updateMaterialActivityViews(
-            mainCoordinatorLayout = binding.settingsCoordinator,
-            nestedView = binding.settingsHolder,
-            useTransparentNavigation = true,
-            useTopSearchMenu = false
-        )
+        setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.settingsNestedScrollview))
         setupMaterialScrollListener(
             scrollingView = binding.settingsNestedScrollview,
-            toolbar = binding.settingsToolbar
+            topAppBar = binding.settingsAppbar
         )
     }
 
     override fun onResume() {
         super.onResume()
-        setupToolbar(binding.settingsToolbar, NavigationIcon.Arrow)
+        setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
 
-        setupPurchaseThankYou()
         setupCustomizeColors()
         setupCustomizeNotifications()
         setupUseEnglish()
@@ -123,6 +114,7 @@ class SettingsActivity : SimpleActivity() {
         setupEnableDeliveryReports()
         setupSendLongMessageAsMMS()
         setupGroupMessageAsMMS()
+        setupKeepConversationsArchived()
         setupLockScreenVisibility()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
@@ -135,7 +127,7 @@ class SettingsActivity : SimpleActivity() {
         if (
             blockedNumbersAtPause != -1 && blockedNumbersAtPause != getBlockedNumbers().hashCode()
         ) {
-            refreshMessages()
+            refreshConversations()
         }
 
         arrayOf(
@@ -143,6 +135,7 @@ class SettingsActivity : SimpleActivity() {
             binding.settingsGeneralSettingsLabel,
             binding.settingsOutgoingMessagesLabel,
             binding.settingsNotificationsLabel,
+            binding.settingsArchivedMessagesLabel,
             binding.settingsRecycleBinLabel,
             binding.settingsSecurityLabel,
             binding.settingsMigratingLabel
@@ -170,17 +163,9 @@ class SettingsActivity : SimpleActivity() {
         blockedNumbersAtPause = getBlockedNumbers().hashCode()
     }
 
-    private fun setupPurchaseThankYou() = binding.apply {
-        settingsPurchaseThankYouHolder.beGoneIf(isOrWasThankYouInstalled())
-        settingsPurchaseThankYouHolder.setOnClickListener {
-            launchPurchaseThankYouIntent()
-        }
-    }
-
     private fun setupCustomizeColors() = binding.apply {
-        settingsColorCustomizationLabel.text = getCustomizeColorsString()
         settingsColorCustomizationHolder.setOnClickListener {
-            handleCustomizeColorsClick()
+            startCustomizationActivity()
         }
     }
 
@@ -248,7 +233,7 @@ class SettingsActivity : SimpleActivity() {
     private fun setupChangeDateTimeFormat() = binding.apply {
         settingsChangeDateTimeFormatHolder.setOnClickListener {
             ChangeDateTimeFormatDialog(this@SettingsActivity) {
-                refreshMessages()
+                refreshConversations()
             }
         }
     }
@@ -321,6 +306,14 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupKeepConversationsArchived() = binding.apply {
+        settingsKeepConversationsArchived.isChecked = config.keepConversationsArchived
+        settingsKeepConversationsArchivedHolder.setOnClickListener {
+            settingsKeepConversationsArchived.toggle()
+            config.keepConversationsArchived = settingsKeepConversationsArchived.isChecked
+        }
+    }
+
     private fun setupLockScreenVisibility() = binding.apply {
         settingsLockScreenVisibility.text = getLockScreenVisibilityText()
         settingsLockScreenVisibilityHolder.setOnClickListener {
@@ -369,6 +362,9 @@ class SettingsActivity : SimpleActivity() {
     private fun setupUseRecycleBin() = binding.apply {
         updateRecycleBinButtons()
         settingsUseRecycleBin.isChecked = config.useRecycleBin
+        settingsUseRecycleBin.text = formatWithDeprecatedBadge(
+            labelRes = org.fossify.commons.R.string.move_items_into_recycle_bin
+        )
         settingsUseRecycleBinHolder.setOnClickListener {
             settingsUseRecycleBin.toggle()
             config.useRecycleBin = settingsUseRecycleBin.isChecked

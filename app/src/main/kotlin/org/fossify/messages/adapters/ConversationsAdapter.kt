@@ -25,7 +25,7 @@ import org.fossify.messages.extensions.markThreadMessagesRead
 import org.fossify.messages.extensions.markThreadMessagesUnread
 import org.fossify.messages.extensions.renameConversation
 import org.fossify.messages.extensions.updateConversationArchivedStatus
-import org.fossify.messages.helpers.refreshMessages
+import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.messaging.isShortCodeWithLetters
 import org.fossify.messages.models.Conversation
 
@@ -189,12 +189,12 @@ class ConversationsAdapter(
 
         activity.runOnUiThread {
             if (newList.none { selectedKeys.contains(it.hashCode()) }) {
-                refreshMessages()
+                refreshConversations()
                 finishActMode()
             } else {
                 submitList(newList)
                 if (newList.isEmpty()) {
-                    refreshMessages()
+                    refreshConversations()
                 }
             }
         }
@@ -220,12 +220,12 @@ class ConversationsAdapter(
 
         activity.runOnUiThread {
             if (newList.none { selectedKeys.contains(it.hashCode()) }) {
-                refreshMessages()
+                refreshConversations()
                 finishActMode()
             } else {
                 submitList(newList)
                 if (newList.isEmpty()) {
-                    refreshMessages()
+                    refreshConversations()
                 }
             }
         }
@@ -258,7 +258,7 @@ class ConversationsAdapter(
                 activity.markThreadMessagesRead(it.threadId)
             }
 
-            refreshConversations()
+            refreshConversationsAndFinishActMode()
         }
     }
 
@@ -274,7 +274,7 @@ class ConversationsAdapter(
                 activity.markThreadMessagesUnread(it.threadId)
             }
 
-            refreshConversations()
+            refreshConversationsAndFinishActMode()
         }
     }
 
@@ -303,7 +303,7 @@ class ConversationsAdapter(
         getSelectedItemPositions().forEach {
             notifyItemChanged(it)
         }
-        refreshConversations()
+        refreshConversationsAndFinishActMode()
     }
 
     private fun checkPinBtnVisibility(menu: Menu) {
@@ -312,12 +312,12 @@ class ConversationsAdapter(
         menu.findItem(R.id.cab_pin_conversation).isVisible =
             selectedConversations.any { !pinnedConversations.contains(it.threadId.toString()) }
         menu.findItem(R.id.cab_unpin_conversation).isVisible =
-            selectedConversations.any { pinnedConversations.contains(it.threadId.toString()) }
+            selectedConversations.all { pinnedConversations.contains(it.threadId.toString()) }
     }
 
-    private fun refreshConversations() {
+    private fun refreshConversationsAndFinishActMode() {
         activity.runOnUiThread {
-            refreshMessages()
+            refreshConversations()
             finishActMode()
         }
     }

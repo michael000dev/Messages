@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.provider.Telephony
 import android.text.TextUtils
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import org.fossify.commons.dialogs.PermissionRequiredDialog
 import org.fossify.commons.extensions.adjustAlpha
 import org.fossify.commons.extensions.appLaunched
@@ -32,7 +31,6 @@ import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.hideKeyboard
-import org.fossify.commons.extensions.navigationBarHeight
 import org.fossify.commons.extensions.openNotificationSettings
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.underlineText
@@ -59,14 +57,12 @@ import org.fossify.messages.databinding.ActivityMainBinding
 import org.fossify.messages.extensions.checkAndDeleteOldRecycleBinMessages
 import org.fossify.messages.extensions.clearAllMessagesIfNeeded
 import org.fossify.messages.extensions.clearExpiredScheduledMessages
-import org.fossify.messages.extensions.clearSystemDrafts
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.conversationsDB
 import org.fossify.messages.extensions.getConversations
 import org.fossify.messages.extensions.getMessages
 import org.fossify.messages.extensions.insertOrUpdateConversation
 import org.fossify.messages.extensions.messagesDB
-import org.fossify.messages.extensions.updateUnreadCountBadge
 import org.fossify.messages.helpers.SEARCHED_MESSAGE_ID
 import org.fossify.messages.helpers.THREAD_ID
 import org.fossify.messages.helpers.THREAD_TITLE
@@ -79,6 +75,8 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 class MainActivity : SimpleActivity() {
+    override var isSearchBarEnabled = true
+    
     private val MAKE_DEFAULT_APP_REQUEST = 1
 
     private var storedTextColor = 0
@@ -90,19 +88,13 @@ class MainActivity : SimpleActivity() {
 
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
-        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         appLaunched(BuildConfig.APPLICATION_ID)
         setupOptionsMenu()
         refreshMenuItems()
 
-        updateMaterialActivityViews(
-            mainCoordinatorLayout = binding.mainCoordinator,
-            nestedView = binding.conversationsList,
-            useTransparentNavigation = true,
-            useTopSearchMenu = true
-        )
+        setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.conversationsList))
 
         checkAndDeleteOldRecycleBinMessages()
         clearAllMessagesIfNeeded {
@@ -141,9 +133,6 @@ class MainActivity : SimpleActivity() {
         binding.conversationsProgressBar.setIndicatorColor(properPrimaryColor)
         binding.conversationsProgressBar.trackColor = properPrimaryColor.adjustAlpha(LOWER_ALPHA)
         checkShortcut()
-        (binding.conversationsFab.layoutParams as? CoordinatorLayout.LayoutParams)?.bottomMargin =
-            navigationBarHeight + resources.getDimension(org.fossify.commons.R.dimen.activity_margin)
-                .toInt()
     }
 
     override fun onPause() {
@@ -156,17 +145,18 @@ class MainActivity : SimpleActivity() {
         bus?.unregister(this)
     }
 
-    override fun onBackPressed() {
-        if (binding.mainMenu.isSearchOpen) {
+    override fun onBackPressedCompat(): Boolean {
+        return if (binding.mainMenu.isSearchOpen) {
             binding.mainMenu.closeSearch()
+            true
         } else {
             appLockManager.lock()
-            super.onBackPressed()
+            false
         }
     }
 
     private fun setupOptionsMenu() {
-        binding.mainMenu.getToolbar().inflateMenu(R.menu.menu_main)
+        binding.mainMenu.requireToolbar().inflateMenu(R.menu.menu_main)
         binding.mainMenu.toggleHideOnScroll(true)
         binding.mainMenu.setupMenu()
 
@@ -185,7 +175,7 @@ class MainActivity : SimpleActivity() {
             searchTextChanged(text)
         }
 
-        binding.mainMenu.getToolbar().setOnMenuItemClickListener { menuItem ->
+        binding.mainMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.show_recycle_bin -> launchRecycleBin()
                 R.id.show_archived -> launchArchivedConversations()
@@ -198,7 +188,7 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun refreshMenuItems() {
-        binding.mainMenu.getToolbar().menu.apply {
+        binding.mainMenu.requireToolbar().menu.apply {
             findItem(R.id.show_recycle_bin).isVisible = config.useRecycleBin
             findItem(R.id.show_archived).isVisible = config.isArchiveAvailable
         }
@@ -221,7 +211,6 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun updateMenuColors() {
-        updateStatusbarColor(getProperBackgroundColor())
         binding.mainMenu.updateColors()
     }
 
@@ -288,7 +277,6 @@ class MainActivity : SimpleActivity() {
         checkWhatsNewDialog()
         storeStateVariables()
         getCachedConversations()
-        clearSystemDrafts()
         binding.noConversationsPlaceholder2.setOnClickListener {
             launchNewConversation()
         }
@@ -312,7 +300,6 @@ class MainActivity : SimpleActivity() {
                 listOf()
             }
 
-            updateUnreadCountBadge(conversations)
             runOnUiThread {
                 setupConversations(conversations, cached = true)
                 getNewConversations(
@@ -384,11 +371,7 @@ class MainActivity : SimpleActivity() {
 
             if (config.appRunCount == 1) {
                 conversations.map { it.threadId }.forEach { threadId ->
-                    val messages = getMessages(
-                        threadId = threadId,
-                        getImageResolutions = false,
-                        includeScheduledMessages = false
-                    )
+                    val messages = getMessages(threadId, includeScheduledMessages = false)
                     messages.chunked(30).forEach { currentMessages ->
                         messagesDB.insertMessages(*currentMessages.toTypedArray())
                     }
@@ -656,6 +639,10 @@ class MainActivity : SimpleActivity() {
                 text = R.string.faq_3_text
             ),
             FAQItem(
+                title = R.string.faq_4_title,
+                text = R.string.faq_4_text
+            ),
+            FAQItem(
                 title = org.fossify.commons.R.string.faq_9_title_commons,
                 text = org.fossify.commons.R.string.faq_9_text_commons
             )
@@ -686,7 +673,7 @@ class MainActivity : SimpleActivity() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun refreshMessages(event: Events.RefreshMessages) {
+    fun refreshConversations(@Suppress("unused") event: Events.RefreshConversations) {
         initMessenger()
     }
 

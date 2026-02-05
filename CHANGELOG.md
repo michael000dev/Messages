@@ -6,6 +6,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-01-30
+### Added
+- Added support for custom fonts
+- Added "Copy number to clipboard" option inside chat overflow menu ([#651])
+
+### Changed
+- Improved multi-message copy formatting with timestamps and sender names
+- Updated translations
+
+### Fixed
+- Fixed missing notifications in some cases ([#159])
+- Fixed incorrect blocking of MMS messages in some rare cases ([#644])
+- Fixed issue with importing alphanumeric blocked numbers ([#282])
+- Fixed issue where scheduled messages were not sent after a reboot or app updates ([#641])
+
+## [1.7.0] - 2025-12-16
+### Added
+- Ability to select and copy multiple text messages at once ([#600])
+
+### Changed
+- Updated translations
+
+### Deprecated
+- Deprecated the recycle bin feature ([#290])
+
+### Fixed
+- Fixed new conversation shortcut ([#416])
+- Fixed blocking MMS messages from unknown numbers ([#610])
+
+## [1.6.0] - 2025-10-29
+### Changed
+- Compatibility updates for Android 15 & 16
+- Calling now works directly without launching dialpad ([#562])
+- Search bar is now pinned to the top when scrolling
+- Updated translations
+
+### Fixed
+- Fixed freezing when sending messages ([#574])
+
+## [1.5.0] - 2025-10-18
+### Added
+- Unread badge count for conversations ([#177])
+
+### Changed
+- Optimized loading messages in conversations ([#234])
+- Updated conversation item design to be more compact ([#376])
+- Pin/unpin actions now always show as action buttons in the menu ([#561])
+- Updated translations
+
+### Fixed
+- Fixed position reset when opening attachments in conversations ([#82])
+- Fixed automatic scroll to searched message in conversations ([#350])
+- Fixed non-standard text and avatar sizes in list items
+- Fixed "Mark as read" not working in some cases ([#264])
+
+## [1.4.0] - 2025-10-12
+### Added
+- Ability to save multiple attachments ([#75])
+- Ability to select numbers that aren't starred when starting a new conversation ([#153])
+
+### Changed
+- Reordered menu options throughout the app
+- Updated translations
+
+### Fixed
+- Fixed keyword blocking for MMS messages ([#99])
+- Fixed contact number selection when adding members to a group ([#456])
+- Fixed a glitch in pattern lock after incorrect attempts
+- Fixed disabled send button when sending images without text ([#165])
+
+## [1.3.0] - 2025-09-09
+### Added
+- Option to keep conversations archived ([#334])
+
+### Changed
+- Updated translations
+
+## [1.2.3] - 2025-08-21
+### Changed
+- Updated translations
+
+### Fixed
+- Fixed stale/missing notification badge on some devices
+
 ## [1.2.2] - 2025-08-01
 ### Changed
 - Updated translations
@@ -113,25 +197,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#13]: https://github.com/FossifyOrg/Messages/issues/13
 [#70]: https://github.com/FossifyOrg/Messages/issues/70
+[#75]: https://github.com/FossifyOrg/Messages/issues/75
+[#82]: https://github.com/FossifyOrg/Messages/issues/82
+[#99]: https://github.com/FossifyOrg/Messages/issues/99
 [#115]: https://github.com/FossifyOrg/Messages/issues/115
 [#135]: https://github.com/FossifyOrg/Messages/issues/135
+[#153]: https://github.com/FossifyOrg/Messages/issues/153
+[#159]: https://github.com/FossifyOrg/Messages/issues/159
+[#165]: https://github.com/FossifyOrg/Messages/issues/165
+[#177]: https://github.com/FossifyOrg/Messages/issues/177
 [#180]: https://github.com/FossifyOrg/Messages/issues/180
 [#209]: https://github.com/FossifyOrg/Messages/issues/209
 [#217]: https://github.com/FossifyOrg/Messages/issues/217
 [#225]: https://github.com/FossifyOrg/Messages/issues/225
+[#234]: https://github.com/FossifyOrg/Messages/issues/234
 [#243]: https://github.com/FossifyOrg/Messages/issues/243
 [#262]: https://github.com/FossifyOrg/Messages/issues/262
+[#264]: https://github.com/FossifyOrg/Messages/issues/264
 [#274]: https://github.com/FossifyOrg/Messages/issues/274
 [#279]: https://github.com/FossifyOrg/Messages/issues/279
+[#282]: https://github.com/FossifyOrg/Messages/issues/282
 [#287]: https://github.com/FossifyOrg/Messages/issues/287
 [#288]: https://github.com/FossifyOrg/Messages/issues/288
+[#290]: https://github.com/FossifyOrg/Messages/issues/290
 [#294]: https://github.com/FossifyOrg/Messages/issues/294
 [#309]: https://github.com/FossifyOrg/Messages/issues/309
+[#334]: https://github.com/FossifyOrg/Messages/issues/334
 [#349]: https://github.com/FossifyOrg/Messages/issues/349
+[#350]: https://github.com/FossifyOrg/Messages/issues/350
 [#359]: https://github.com/FossifyOrg/Messages/issues/359
+[#376]: https://github.com/FossifyOrg/Messages/issues/376
+[#416]: https://github.com/FossifyOrg/Messages/issues/416
+[#456]: https://github.com/FossifyOrg/Messages/issues/456
 [#461]: https://github.com/FossifyOrg/Messages/issues/461
+[#561]: https://github.com/FossifyOrg/Messages/issues/561
+[#562]: https://github.com/FossifyOrg/Messages/issues/562
+[#574]: https://github.com/FossifyOrg/Messages/issues/574
+[#600]: https://github.com/FossifyOrg/Messages/issues/600
+[#610]: https://github.com/FossifyOrg/Messages/issues/610
+[#641]: https://github.com/FossifyOrg/Messages/issues/641
+[#644]: https://github.com/FossifyOrg/Messages/issues/644
+[#651]: https://github.com/FossifyOrg/Messages/issues/651
 
-[Unreleased]: https://github.com/FossifyOrg/Messages/compare/1.2.2...HEAD
+[Unreleased]: https://github.com/FossifyOrg/Messages/compare/1.8.0...HEAD
+[1.8.0]: https://github.com/FossifyOrg/Messages/compare/1.7.0...1.8.0
+[1.7.0]: https://github.com/FossifyOrg/Messages/compare/1.6.0...1.7.0
+[1.6.0]: https://github.com/FossifyOrg/Messages/compare/1.5.0...1.6.0
+[1.5.0]: https://github.com/FossifyOrg/Messages/compare/1.4.0...1.5.0
+[1.4.0]: https://github.com/FossifyOrg/Messages/compare/1.3.0...1.4.0
+[1.3.0]: https://github.com/FossifyOrg/Messages/compare/1.2.3...1.3.0
+[1.2.3]: https://github.com/FossifyOrg/Messages/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/FossifyOrg/Messages/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/FossifyOrg/Messages/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/FossifyOrg/Messages/compare/1.1.7...1.2.0

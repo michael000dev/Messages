@@ -7,7 +7,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.google.gson.Gson
 import com.reddit.indicatorfastscroll.FastScrollItemIndicator
-import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.areSystemAnimationsEnabled
 import org.fossify.commons.extensions.beGone
@@ -16,11 +15,11 @@ import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getColorStateList
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getMyContactsCursor
-import org.fossify.commons.extensions.getPhoneNumberTypeText
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.extensions.hideKeyboard
+import org.fossify.commons.extensions.maybeShowNumberPickerDialog
 import org.fossify.commons.extensions.normalizeString
 import org.fossify.commons.extensions.onTextChangeListener
 import org.fossify.commons.extensions.toast
@@ -33,7 +32,6 @@ import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.SimpleContactsHelper
 import org.fossify.commons.helpers.ensureBackgroundThread
-import org.fossify.commons.models.RadioItem
 import org.fossify.commons.models.SimpleContact
 import org.fossify.messages.R
 import org.fossify.messages.adapters.ContactsAdapter
@@ -59,21 +57,15 @@ class NewConversationActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityNewConversationBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         title = getString(R.string.new_conversation)
         updateTextColors(binding.newConversationHolder)
 
-        updateMaterialActivityViews(
-            mainCoordinatorLayout = binding.newConversationCoordinator,
-            nestedView = binding.contactsList,
-            useTransparentNavigation = true,
-            useTopSearchMenu = false
-        )
+        setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.contactsList))
         setupMaterialScrollListener(
             scrollingView = binding.contactsList,
-            toolbar = binding.newConversationToolbar
+            topAppBar = binding.newConversationAppbar
         )
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -87,7 +79,7 @@ class NewConversationActivity : SimpleActivity() {
 
     override fun onResume() {
         super.onResume()
-        setupToolbar(binding.newConversationToolbar, NavigationIcon.Arrow)
+        setupTopAppBar(binding.newConversationAppbar, NavigationIcon.Arrow)
         binding.noContactsPlaceholder2.setTextColor(getProperPrimaryColor())
         binding.noContactsPlaceholder2.underlineText()
         binding.suggestionsLabel.setTextColor(getProperPrimaryColor())
@@ -145,7 +137,8 @@ class NewConversationActivity : SimpleActivity() {
 
     private fun isThirdPartyIntent(): Boolean {
         val result = SmsIntentParser.parse(intent)
-        if (result != null) {
+
+        if (result != null && (result.first.isNotEmpty() || result.second.isNotEmpty())) {
             val (body, recipients) = result
             launchThreadActivity(
                 phoneNumber = URLDecoder.decode(recipients.replace("+", "%2b").trim()),
@@ -200,30 +193,8 @@ class NewConversationActivity : SimpleActivity() {
             ContactsAdapter(this, contacts, binding.contactsList) {
                 hideKeyboard()
                 val contact = it as SimpleContact
-                val phoneNumbers = contact.phoneNumbers
-                if (phoneNumbers.size > 1) {
-                    val primaryNumber = contact.phoneNumbers.find { it.isPrimary }
-                    if (primaryNumber != null) {
-                        launchThreadActivity(primaryNumber.value, contact.name)
-                    } else {
-                        val items = ArrayList<RadioItem>()
-                        phoneNumbers.forEachIndexed { index, phoneNumber ->
-                            val type = getPhoneNumberTypeText(phoneNumber.type, phoneNumber.label)
-                            items.add(
-                                RadioItem(
-                                    index,
-                                    "${phoneNumber.normalizedNumber} ($type)",
-                                    phoneNumber.normalizedNumber
-                                )
-                            )
-                        }
-
-                        RadioGroupDialog(this, items) {
-                            launchThreadActivity(it as String, contact.name)
-                        }
-                    }
-                } else {
-                    launchThreadActivity(phoneNumbers.first().normalizedNumber, contact.name)
+                maybeShowNumberPickerDialog(contact.phoneNumbers) { number ->
+                    launchThreadActivity(number.normalizedNumber, contact.name)
                 }
             }.apply {
                 binding.contactsList.adapter = this
